@@ -1,0 +1,32 @@
+{
+  "name": "rest_api_server",
+  "version": "1.0.0",
+  "description": "REST API server for MOVIEGRAM technical test",
+  "homepage": "https://github.com/sergio-egp/moviegram#readme",
+  "bugs": {
+    "url": "https://github.com/sergio-egp/moviegram/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sergio-egp/moviegram.git"
+  },
+  "license": "ISC",
+  "author": "Sergio Campos Vega",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.0.13",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.3"
+  }
+}
