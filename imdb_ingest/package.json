@@ -1,0 +1,32 @@
+{
+  "name": "imdb_ingest",
+  "version": "1.0.0",
+  "description": "Ingest data from IMDB",
+  "homepage": "https://github.com/sergio-egp/askcinephile#readme",
+  "bugs": {
+    "url": "https://github.com/sergio-egp/askcinephile/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sergio-egp/askcinephile.git"
+  },
+  "license": "ISC",
+  "author": "Sergio Campos Vega",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "dev": "nodemon src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "axios": "^1.10.0",
+    "csv": "^6.4.0",
+    "csv-parse": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.13",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

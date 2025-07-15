@@ -1,25 +1,27 @@
-## July 10th
-
-**First thoughts**: 
+## First Thoughts
 
 **Enviroment setup**
 
+**system_module_1**
 
+I thought about communicating with the DDBB via its driver and looking for a way to import the dataset directly without the need to read and parse it row by row in a separate function.
 
+**Security concerns**
+Prevent DDOS attacks?
 
-
-
-
+---
 
 The idea is to provide a solution that customers can use to get information from IMDb in a friendly manner.
 
 The system has two parts:
+
 - Ingestion of IMDb data
 - Server and client to expose the data through requests for our customers
 
 ## High level requirements
 
 It is required to have:
+
 - A Process to ingest data from https://datasets.imdbws.com into the system (known as `system_module_1` from now on).
 - Client-server architecture for scalability and stability (known as `system_module_2` from now on).
 
@@ -35,14 +37,16 @@ The solution should be able to load/store IMDb data. It would also be useful to 
 `system_module_2`'s client is a CLI application for customers to query data from the `system_module_2` server and show the responses.
 
 Implement:
+
 - One endpoint get information about people
 - Another endpoint to get information about films
 
 Some examples:
+
 - If a user requests information about "Bruce Lee", the response could be something like:
-    - `Bruce Lee was born in 1940 and he was actor and producer.`
+  - `Bruce Lee was born in 1940 and he was actor and producer.`
 - If a user requests information about the "Blacksmith Scene" documentary, the response could be something like:
-    - `Blacksmith Scene, originally titled 'Les forgerons', is a documentary.`
+  - `Blacksmith Scene, originally titled 'Les forgerons', is a documentary.`
 
 ## Task
 
@@ -58,11 +62,11 @@ Important things:
 - Example of interaction is just a draft with the only purpose of showing the idea to the developer. Feel free to implement it in other way, with different requests, etc.
 - The outcome of this task should have "Open Source" quality (i.e. what you expect when you reach to Github looking for a project)
 - Some quality standards:
-    - README file
-    - User documentation
-    - Implementation notes: what others need to know in order to be able to maintain the software
-    - Unit tests
-    - Performance will be observed and taken into account for both the data loading process and API queries.
+  - README file
+  - User documentation
+  - Implementation notes: what others need to know in order to be able to maintain the software
+  - Unit tests
+  - Performance will be observed and taken into account for both the data loading process and API queries.
 
 **Bonus**: Apart from delivering the solution as a project in order to review the code and all content, you can optionally prepare the solution using `Docker` packaging the application and its dependencies into a container that can be run anywhere.
 
