@@ -23,9 +23,10 @@ export class PeopleRepository {
         }[]
       >(
         `
-      SELECT *
+      SELECT id, nconst, primaryName, birthYear, deathYear, primaryProfession, knownForTitles
       FROM PEOPLE
       WHERE LOWER(primaryName) LIKE LOWER(?) 
+      LIMIT 1
       `,
         [actorName]
       );

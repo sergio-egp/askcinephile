@@ -11,17 +11,22 @@ export class FilmsRepository {
     try {
       const [query] = await askCinephileDB.query<
         {
+          id: number;
+          tconst: string;
           titleType: string;
           primaryTitle: string;
           originalTitle: string;
           startYear: number;
+          endYear: number;
+          runtimeMinutes: number;
           genres: string;
         }[]
       >(
         `
-        SELECT *
+        SELECT id, titleType, primaryTitle, originalTitle, startYear, endYear, runtimeMinutes, genres
         FROM FILMS
         WHERE LOWER(primaryTitle) LIKE LOWER(?) 
+        LIMIT 1
         `,
         [filmName]
       );

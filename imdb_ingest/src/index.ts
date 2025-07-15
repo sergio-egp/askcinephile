@@ -8,8 +8,6 @@ import zlib from "zlib";
 
 dotenv.config();
 
-process.env.DEBUG = "mariadb";
-
 const IMDB_FILMS_DATASET_URL =
   "https://datasets.imdbws.com/title.basics.tsv.gz";
 const IMDB_PEOPLE_DATASET_URL =
@@ -28,16 +26,17 @@ async function main() {
 
   console.log("Downloading datasets...");
 
-  const peopleDatasetResponse = await axios.get(IMDB_PEOPLE_DATASET_URL, {
-    responseType: "stream",
-  });
+  const promiseArray = await Promise.all([
+    axios.get(IMDB_PEOPLE_DATASET_URL, {
+      responseType: "stream",
+    }),
+    axios.get(IMDB_FILMS_DATASET_URL, {
+      responseType: "stream",
+    }),
+  ]);
 
-  console.log("Downloading films dataset...");
-  const filmsDatasetResponse = await axios.get(IMDB_FILMS_DATASET_URL, {
-    responseType: "stream",
-  });
-
-  await Promise.all([peopleDatasetResponse, filmsDatasetResponse]);
+  const peopleDatasetResponse = promiseArray[0];
+  const filmsDatasetResponse = promiseArray[1];
 
   await fs.promises.mkdir(DATA_DIR, { recursive: true });
 
@@ -46,14 +45,14 @@ async function main() {
   const peopleOutStream = fs.createWriteStream(PEOPLE_OUTPUT_FILE);
   const filmsOutStream = fs.createWriteStream(FILMS_OUTPUT_FILE);
 
-  const peoplePromise = await new Promise<void>((resolve, reject) => {
+  const peoplePromise = new Promise<void>((resolve, reject) => {
     peopleDatasetResponse.data
       .pipe(zlib.createGunzip())
       .pipe(peopleOutStream)
       .on("finish", resolve)
       .on("error", reject);
   });
-  const filmsPromise = await new Promise<void>((resolve, reject) => {
+  const filmsPromise = new Promise<void>((resolve, reject) => {
     filmsDatasetResponse.data
       .pipe(zlib.createGunzip())
       .pipe(filmsOutStream)
@@ -80,7 +79,7 @@ async function main() {
   const peopleCmd = `mysql --local-infile=1 -h ${process.env.DB_HOST} -u ${process.env.DB_USER} -p${process.env.DB_PASSWORD} ${process.env.DB_DATABASE} -e "LOAD DATA LOCAL INFILE '${PEOPLE_OUTPUT_FILE}' INTO TABLE PEOPLE FIELDS TERMINATED BY '\\t' LINES TERMINATED BY '\\n' IGNORE 1 LINES (nconst, primaryName, birthYear, deathYear, primaryProfession, knownForTitles)"`;
   const filmsCmd = `mysql --local-infile=1 -h ${process.env.DB_HOST} -u ${process.env.DB_USER} -p${process.env.DB_PASSWORD} ${process.env.DB_DATABASE} -e "LOAD DATA LOCAL INFILE '${FILMS_OUTPUT_FILE}' INTO TABLE FILMS FIELDS TERMINATED BY '\\t' LINES TERMINATED BY '\\n' IGNORE 1 LINES (tconst, titleType, primaryTitle, originalTitle, isAdult, startYear, endYear, runtimeMinutes, genres)"`;
 
-  const peopleCmcPromise = await new Promise<void>((resolve, reject) => {
+  const peopleCmcPromise = new Promise<void>((resolve, reject) => {
     exec(peopleCmd, (error, stdout, stderr) => {
       if (error) {
         console.error("People cmd Error:", error, stderr);
@@ -92,7 +91,7 @@ async function main() {
     });
   });
 
-  const filmsCmcPromise = await new Promise<void>((resolve, reject) => {
+  const filmsCmcPromise = new Promise<void>((resolve, reject) => {
     exec(filmsCmd, (error, stdout, stderr) => {
       if (error) {
         console.error("Films cmd Error:", error, stderr);
