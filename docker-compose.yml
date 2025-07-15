@@ -1,9 +1,26 @@
 services:
   imdb_ingest:
     build:
-      context: ./askcinephile/imdb_ingest/
+      context: ./imdb_ingest/
     container_name: askcinephile_imdb_ingest
-    env_file: ./imdb_ingest/.env
+    env_file:
+      - ./imdb_ingest/.env
+
+  cli_client:
+    build:
+      context: ./askcinephile/cli_client/
+    container_name: askcinephile_cli_client
+
+  rest_api_server:
+    build:
+      context: ./askcinephile/rest_api_server/
+    container_name: askcinephile_rest_api_server
+    env_file:
+      - ./askcinephile/rest_api_server/.env
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
 
   mariadb:
     container_name: mariadb
