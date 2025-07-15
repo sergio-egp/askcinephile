@@ -140,3 +140,6 @@ vite.config.ts.timestamp-*
 
 # Database data
 db_volume/
+
+# Ingest data
+imdb_ingest/temp/
