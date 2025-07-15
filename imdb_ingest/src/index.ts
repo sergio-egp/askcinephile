@@ -76,8 +76,8 @@ async function main() {
   await connection.query("TRUNCATE TABLE FILMS");
 
   console.log("Populating database...");
-  const peopleCmd = `mysql --local-infile=1 -h ${process.env.DB_HOST} -u ${process.env.DB_USER} -p${process.env.DB_PASSWORD} ${process.env.DB_DATABASE} -e "LOAD DATA LOCAL INFILE '${PEOPLE_OUTPUT_FILE}' INTO TABLE PEOPLE FIELDS TERMINATED BY '\\t' LINES TERMINATED BY '\\n' IGNORE 1 LINES (nconst, primaryName, birthYear, deathYear, primaryProfession, knownForTitles)"`;
-  const filmsCmd = `mysql --local-infile=1 -h ${process.env.DB_HOST} -u ${process.env.DB_USER} -p${process.env.DB_PASSWORD} ${process.env.DB_DATABASE} -e "LOAD DATA LOCAL INFILE '${FILMS_OUTPUT_FILE}' INTO TABLE FILMS FIELDS TERMINATED BY '\\t' LINES TERMINATED BY '\\n' IGNORE 1 LINES (tconst, titleType, primaryTitle, originalTitle, isAdult, startYear, endYear, runtimeMinutes, genres)"`;
+  const peopleCmd = `mariadb --enable-local-infile -h ${process.env.DB_HOST} -u ${process.env.DB_USER} -p${process.env.DB_PASSWORD} -D ${process.env.DB_DATABASE} -e "LOAD DATA LOCAL INFILE '${PEOPLE_OUTPUT_FILE}' INTO TABLE PEOPLE FIELDS TERMINATED BY '\\t' LINES TERMINATED BY '\\n' IGNORE 1 LINES (nconst, primaryName, birthYear, deathYear, primaryProfession, knownForTitles)"`;
+  const filmsCmd = `mariadb --enable-local-infile -h ${process.env.DB_HOST} -u ${process.env.DB_USER} -p${process.env.DB_PASSWORD} -D ${process.env.DB_DATABASE} -e "LOAD DATA LOCAL INFILE '${FILMS_OUTPUT_FILE}' INTO TABLE FILMS FIELDS TERMINATED BY '\\t' LINES TERMINATED BY '\\n' IGNORE 1 LINES (tconst, titleType, primaryTitle, originalTitle, isAdult, startYear, endYear, runtimeMinutes, genres)"`;
 
   const peopleCmcPromise = new Promise<void>((resolve, reject) => {
     exec(peopleCmd, (error, stdout, stderr) => {

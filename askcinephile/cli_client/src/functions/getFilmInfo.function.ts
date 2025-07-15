@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_ENDPOINT: string = "http://localhost:3000/api/films";
+const API_ENDPOINT: string = "http://rest_api_server:3000/api/films";
 
 export async function getFilmInfo(
   filmName: string

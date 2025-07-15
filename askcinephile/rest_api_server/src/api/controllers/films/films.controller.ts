@@ -11,6 +11,7 @@ export class FilmsController {
     try {
       const filmName: string = req.params.filmName;
       const filmInfo: string = await FilmsService.getFilmInfo(filmName);
+      console.log("REQUEST", req.params.filmName);
 
       if (filmInfo) {
         res.status(200).json({ message: filmInfo });

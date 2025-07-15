@@ -2,18 +2,29 @@ services:
   imdb_ingest:
     build:
       context: ./imdb_ingest/
+      dockerfile: ./imbd_ingest.dockerfile
     container_name: askcinephile_imdb_ingest
     env_file:
       - ./imdb_ingest/.env
+    profiles:
+      - imdb_ingest
+    depends_on:
+      - database
 
   cli_client:
     build:
       context: ./askcinephile/cli_client/
+      dockerfile: ./cli_client.dockerfile
     container_name: askcinephile_cli_client
+    tty: true
+    stdin_open: true
+    profiles:
+      - cli_client
 
   rest_api_server:
     build:
       context: ./askcinephile/rest_api_server/
+      dockerfile: ./rest_api_server.dockerfile
     container_name: askcinephile_rest_api_server
     env_file:
       - ./askcinephile/rest_api_server/.env
@@ -21,9 +32,11 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+    depends_on:
+      - database
 
-  mariadb:
-    container_name: mariadb
+  database:
+    container_name: askcinephile_database
     image: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: secret

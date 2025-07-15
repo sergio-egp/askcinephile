@@ -1,25 +1,17 @@
 # AskCinephile
 
-## Requirements
-
-- install mysql
-
-`sudo apt install mysql-client-core-8.0`
+AskCinephile! your cinema expert is here!
 
 ## How to Run Application
 
-### run database container
+### Run database and rest_api container
 
-`cd askcinephile/database/ ; docker-composeup -d`
+`docker-compose up -d`
 
-### running the imdb data ingest process
+### Run the imdb data ingest process
 
-`cd askcinephile/imdb_ingest/ ; npm install ; npm run start`
+`docker compose --profile imdb_ingest up`
 
-### running rest_api_server
+### Start the cli_client
 
-`cd askcinephile/rest_api_server/ ; npm install ; npm run start`
-
-### running cli_client
-
-`cd askcinephile/cli_client/ ; npm install ; npm run start`
+`docker compose run cli_client`
