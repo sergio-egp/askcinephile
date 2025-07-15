@@ -10,9 +10,13 @@ export class PeopleController {
   ) {
     try {
       const actorName: string = req.params.actorName;
-      const actorInfo: unknown = await PeopleService.getActorInfo(actorName);
+      const actorInfo: string = await PeopleService.getActorInfo(actorName);
 
-      res.status(200).json({ message: "BRUCE WILLIS" });
+      if (actorInfo) {
+        res.status(200).json({ message: actorInfo });
+      } else {
+        res.status(404).send();
+      }
     } catch (error) {
       next(error);
     }

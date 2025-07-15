@@ -1,123 +1,110 @@
 import axios from "axios";
-import { parse } from "csv-parse";
-import { pipeline } from "stream";
-import { promisify } from "util";
+import { exec } from "child_process";
+import dotenv from "dotenv";
+import fs from "fs";
+import mariadb from "mariadb";
+import path from "path";
 import zlib from "zlib";
+
+dotenv.config();
+
+process.env.DEBUG = "mariadb";
 
 const IMDB_FILMS_DATASET_URL =
   "https://datasets.imdbws.com/title.basics.tsv.gz";
 const IMDB_PEOPLE_DATASET_URL =
   "https://datasets.imdbws.com/name.basics.tsv.gz";
-const BATCH_SIZE = 5000;
-
-const pipelineAsync = promisify(pipeline);
+const DATA_DIR = path.join(process.cwd(), "temp/data");
+const PEOPLE_OUTPUT_FILE = path.join(DATA_DIR, "name.basics.tsv");
+const FILMS_OUTPUT_FILE = path.join(DATA_DIR, "title.basics.tsv");
 
 async function main() {
   console.log(
     `Information courtesy of\nIMDb\n(https://www.imdb.com).\nUsed with permission.
-      \n\n==============================\n
-      AskCinephile Ingestion Process
-      \n==============================\n\n`
+    \n\n==============================\nAskCinephile Ingestion Process\n==============================\n\n`
   );
 
   console.log("Initializing IMDB ingestion process...");
 
-  console.log("Clearing previous data...");
+  console.log("Downloading datasets...");
 
-  console.log("Downloading people dataset...");
   const peopleDatasetResponse = await axios.get(IMDB_PEOPLE_DATASET_URL, {
     responseType: "stream",
   });
 
-  const gunzip = zlib.createGunzip();
-
-  const parser = parse({
-    delimiter: "\t",
-    columns: true,
-    relax_quotes: true,
-    relax_column_count: true,
-    skip_empty_lines: true,
+  console.log("Downloading films dataset...");
+  const filmsDatasetResponse = await axios.get(IMDB_FILMS_DATASET_URL, {
+    responseType: "stream",
   });
 
-  let count = 0;
-  let batch: {
-    nconst: any;
-    primaryName: any;
-    birthYear: number | null;
-    deathYear: number | null;
-    primaryProfession: any;
-    knownForTitles: any;
-  }[] = [];
+  await Promise.all([peopleDatasetResponse, filmsDatasetResponse]);
 
-  parser.on("readable", async () => {
-    let record;
-    while ((record = parser.read()) != null) {
-      const transformed = await transformRecord(record);
-      batch.push(transformed);
+  await fs.promises.mkdir(DATA_DIR, { recursive: true });
 
-      if (batch.length >= BATCH_SIZE) {
-        await processBatch(batch);
-        batch = [];
-      }
+  console.log("Decompressing and writing to disk...");
 
-      count++;
-    }
+  const peopleOutStream = fs.createWriteStream(PEOPLE_OUTPUT_FILE);
+  const filmsOutStream = fs.createWriteStream(FILMS_OUTPUT_FILE);
+
+  const peoplePromise = await new Promise<void>((resolve, reject) => {
+    peopleDatasetResponse.data
+      .pipe(zlib.createGunzip())
+      .pipe(peopleOutStream)
+      .on("finish", resolve)
+      .on("error", reject);
+  });
+  const filmsPromise = await new Promise<void>((resolve, reject) => {
+    filmsDatasetResponse.data
+      .pipe(zlib.createGunzip())
+      .pipe(filmsOutStream)
+      .on("finish", resolve)
+      .on("error", reject);
   });
 
-  parser.on("end", async () => {
-    if (batch.length > 0) {
-      await processBatch(batch);
-    }
-    console.log(`Ingestion complete. Total records: ${count}`);
+  await Promise.all([peoplePromise, filmsPromise]);
+
+  const connection = mariadb.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    port: Number(process.env.DB_PORT),
+    connectionLimit: 3,
   });
 
-  parser.on("error", (error) => {
-    console.error("Parser error: ", error);
-  });
-
-  await pipelineAsync(peopleDatasetResponse.data, gunzip, parser);
-
-  console.log("Pipeline finished");
-
-  //   console.log("Downloading films dataset...");
-  //   const filmsDatasetResponse = await axios.get(IMDB_FILMS_DATASET_URL, {
-  //     responseType: "stream",
-  //   });
+  console.log("Clearing previous data...");
+  await connection.query("TRUNCATE TABLE PEOPLE");
+  await connection.query("TRUNCATE TABLE FILMS");
 
   console.log("Populating database...");
-}
+  const peopleCmd = `mysql --local-infile=1 -h ${process.env.DB_HOST} -u ${process.env.DB_USER} -p${process.env.DB_PASSWORD} ${process.env.DB_DATABASE} -e "LOAD DATA LOCAL INFILE '${PEOPLE_OUTPUT_FILE}' INTO TABLE PEOPLE FIELDS TERMINATED BY '\\t' LINES TERMINATED BY '\\n' IGNORE 1 LINES (nconst, primaryName, birthYear, deathYear, primaryProfession, knownForTitles)"`;
+  const filmsCmd = `mysql --local-infile=1 -h ${process.env.DB_HOST} -u ${process.env.DB_USER} -p${process.env.DB_PASSWORD} ${process.env.DB_DATABASE} -e "LOAD DATA LOCAL INFILE '${FILMS_OUTPUT_FILE}' INTO TABLE FILMS FIELDS TERMINATED BY '\\t' LINES TERMINATED BY '\\n' IGNORE 1 LINES (tconst, titleType, primaryTitle, originalTitle, isAdult, startYear, endYear, runtimeMinutes, genres)"`;
 
-async function transformRecord(record: any): Promise<{
-  nconst: any;
-  primaryName: any;
-  birthYear: number | null;
-  deathYear: number | null;
-  primaryProfession: any;
-  knownForTitles: any;
-}> {
-  return {
-    nconst: record.nconst,
-    primaryName: record.primaryName,
-    birthYear:
-      record.birthYear === "\\N" ? null : parseInt(record.birthYear, 10),
-    deathYear:
-      record.deathYear === "\\N" ? null : parseInt(record.deathYear, 10),
-    primaryProfession: record.primaryProfession?.split(",") || [],
-    knownForTitles: record.knownForTitles?.split(",") || [],
-  };
-}
+  const peopleCmcPromise = await new Promise<void>((resolve, reject) => {
+    exec(peopleCmd, (error, stdout, stderr) => {
+      if (error) {
+        console.error("People cmd Error:", error, stderr);
+        reject(error);
+      } else {
+        console.log(`Ingestion of people data complete`, stdout);
+        resolve();
+      }
+    });
+  });
 
-async function processBatch(
-  batch: {
-    nconst: any;
-    primaryName: any;
-    birthYear: number | null;
-    deathYear: number | null;
-    primaryProfession: any;
-    knownForTitles: any;
-  }[]
-): Promise<void> {
-  console.log(`Processing batch of size: ${batch.length}`);
+  const filmsCmcPromise = await new Promise<void>((resolve, reject) => {
+    exec(filmsCmd, (error, stdout, stderr) => {
+      if (error) {
+        console.error("Films cmd Error:", error, stderr);
+        reject(error);
+      } else {
+        console.log(`Ingestion of films data complete`, stdout);
+        resolve();
+      }
+    });
+  });
+
+  await Promise.all([peopleCmcPromise, filmsCmcPromise]);
 }
 
 main().catch((error) => {

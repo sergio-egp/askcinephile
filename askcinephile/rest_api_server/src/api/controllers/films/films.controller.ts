@@ -10,9 +10,13 @@ export class FilmsController {
   ) {
     try {
       const filmName: string = req.params.filmName;
-      const filmInfo: unknown = await FilmsService.getFilmInfo(filmName);
+      const filmInfo: string = await FilmsService.getFilmInfo(filmName);
 
-      res.status(200).json({ message: "BRAVEHEART" });
+      if (filmInfo) {
+        res.status(200).json({ message: filmInfo });
+      } else {
+        res.status(404).send();
+      }
     } catch (error) {
       next(error);
     }

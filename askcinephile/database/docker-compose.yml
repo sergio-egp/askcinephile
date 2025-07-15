@@ -1,12 +1,13 @@
 services:
-  askcinephileDB:
-    container_name: askcinephileDB
+  mariadb:
+    container_name: mariadb
     image: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: secret
       MYSQL_DATABASE: askcinephile
     volumes:
       - ./db_volume:/var/lib/mysql
+      - ./mysql-conf/my.cnf:/etc/mysql/conf.d/my.cnf:ro
     ports:
       - "3306:3306"
     restart: unless-stopped

@@ -16,7 +16,7 @@ async function main(): Promise<void> {
     while (selectedOption != "exit") {
       if (selectedOption == "films") {
         const filmsAnswer: string = await input({
-          message: "Enter film name:",
+          message: "Enter the original name of the film:",
           required: true,
         });
         const filmInfo: string | undefined = await getFilmInfo(filmsAnswer);
@@ -28,7 +28,7 @@ async function main(): Promise<void> {
         selectedOption = await firstChoice();
       } else if (selectedOption == "actors") {
         const actorsAnswer: string = await input({
-          message: "Enter actor name:",
+          message: "Enter the primary name of the actor:",
           required: true,
         });
         const actorInfo: string | undefined = await getActorInfo(actorsAnswer);
