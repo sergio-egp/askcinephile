@@ -1,6 +1,6 @@
 import cors from "cors";
 import dotenv from "dotenv";
-import express, { Request, Response } from "express";
+import express from "express";
 import routerIndex from "./api/routes/index.routes";
 import { errorHandler } from "./middlewares/error.middleware";
 import { notFoundHandler } from "./middlewares/notFound.middleware";
@@ -20,8 +20,6 @@ const corsOptionsDelegate = function (req: any, callback: any) {
   }
   callback(null, corsOptions);
 };
-
-// app.use(helmet({ strictTransportSecurity: false }));
 
 app.disable("x-powered-by");
 
