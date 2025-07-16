@@ -29,12 +29,6 @@ app.use(cors(corsOptionsDelegate));
 
 app.use(express.json());
 
-app.get("/", (req: Request, res: Response) => {
-  res.send(
-    `IP: ${req.ip} \n remoteAdress: ${req.socket.remoteAddress} \n remotePort: ${req.socket.remotePort}`
-  );
-});
-
 app.use("/api", routerIndex);
 
 app.use(notFoundHandler);
